@@ -1,5 +1,5 @@
 {
-    "keyboard_name": "Tractyl Manuform (5x6) Raspberry Pi Pico",
+    "keyboard_name": "5x6 Dactyl Manuform w/ Trackball, Raspberry Pi Pico",
     "maintainer": "lukeshafer",
     "processor": "RP2040",
     "bootloader": "rp2040",
