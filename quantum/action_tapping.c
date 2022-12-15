@@ -15,6 +15,14 @@
 
 #ifndef NO_ACTION_TAPPING
 
+#    if defined(IGNORE_MOD_TAP_INTERRUPT_PER_KEY)
+#        error "IGNORE_MOD_TAP_INTERRUPT_PER_KEY has been removed; the code needs to be ported to use HOLD_ON_OTHER_KEY_PRESS_PER_KEY instead."
+#    elif !defined(IGNORE_MOD_TAP_INTERRUPT)
+#        if !defined(PERMISSIVE_HOLD) && !defined(PERMISSIVE_HOLD_PER_KEY) && !defined(HOLD_ON_OTHER_KEY_PRESS) && !defined(HOLD_ON_OTHER_KEY_PRESS_PER_KEY)
+#            pragma message "The default behavior of mod-taps will change to mimic IGNORE_MOD_TAP_INTERRUPT in the future.\nIf you wish to keep the old default behavior of mod-taps, please use HOLD_ON_OTHER_KEY_PRESS."
+#        endif
+#    endif
+
 #    define IS_TAPPING() !IS_NOEVENT(tapping_key.event)
 #    define IS_TAPPING_PRESSED() (IS_TAPPING() && tapping_key.event.pressed)
 #    define IS_TAPPING_RELEASED() (IS_TAPPING() && !tapping_key.event.pressed)
@@ -25,6 +33,7 @@
 #        define IS_TAPPING_RECORD(r) (IS_TAPPING() && KEYEQ(tapping_key.event.key, (r->event.key)) && tapping_key.keycode == r->keycode)
 #    endif
 #    define WITHIN_TAPPING_TERM(e) (TIMER_DIFF_16(e.time, tapping_key.event.time) < GET_TAPPING_TERM(get_record_keycode(&tapping_key, false), &tapping_key))
+#    define WITHIN_QUICK_TAP_TERM(e) (TIMER_DIFF_16(e.time, tapping_key.event.time) < GET_QUICK_TAP_TERM(get_record_keycode(&tapping_key, false), &tapping_key))
 
 #    ifdef DYNAMIC_TAPPING_TERM_ENABLE
 uint16_t g_tapping_term = TAPPING_TERM;
@@ -40,9 +49,9 @@ __attribute__((weak)) uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *r
 }
 #    endif
 
-#    ifdef TAPPING_FORCE_HOLD_PER_KEY
-__attribute__((weak)) bool get_tapping_force_hold(uint16_t keycode, keyrecord_t *record) {
-    return false;
+#    ifdef QUICK_TAP_TERM_PER_KEY
+__attribute__((weak)) uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
+    return QUICK_TAP_TERM;
 }
 #    endif
 
@@ -121,7 +130,7 @@ void action_tapping_process(keyrecord_t record) {
  * readable. The conditional definition of tapping_keycode and all the
  * conditional uses of it are hidden inside macros named TAP_...
  */
-#    if (defined(AUTO_SHIFT_ENABLE) && defined(RETRO_SHIFT)) || defined(PERMISSIVE_HOLD_PER_KEY) || defined(TAPPING_FORCE_HOLD_PER_KEY) || defined(HOLD_ON_OTHER_KEY_PRESS_PER_KEY)
+#    if (defined(AUTO_SHIFT_ENABLE) && defined(RETRO_SHIFT)) || defined(PERMISSIVE_HOLD_PER_KEY) || defined(QUICK_TAP_TERM_PER_KEY) || defined(HOLD_ON_OTHER_KEY_PRESS_PER_KEY)
 #        define TAP_DEFINE_KEYCODE uint16_t tapping_keycode = get_record_keycode(&tapping_key, false)
 #    else
 #        define TAP_DEFINE_KEYCODE
@@ -134,8 +143,8 @@ void action_tapping_process(keyrecord_t record) {
 #            define TAP_GET_RETRO_TAPPING true
 #        endif
 #        define MAYBE_RETRO_SHIFTING(ev) (TAP_GET_RETRO_TAPPING && (RETRO_SHIFT + 0) != 0 && TIMER_DIFF_16((ev).time, tapping_key.event.time) < (RETRO_SHIFT + 0))
-#        define TAP_IS_LT IS_LT(tapping_keycode)
-#        define TAP_IS_MT IS_MT(tapping_keycode)
+#        define TAP_IS_LT IS_QK_LAYER_TAP(tapping_keycode)
+#        define TAP_IS_MT IS_QK_MOD_TAP(tapping_keycode)
 #        define TAP_IS_RETRO IS_RETRO(tapping_keycode)
 #    else
 #        define TAP_GET_RETRO_TAPPING false
@@ -161,20 +170,10 @@ void action_tapping_process(keyrecord_t record) {
 #        define TAP_GET_HOLD_ON_OTHER_KEY_PRESS false
 #    endif
 
-#    ifdef IGNORE_MOD_TAP_INTERRUPT_PER_KEY
-#        define TAP_GET_IGNORE_MOD_TAP_INTERRUPT get_ignore_mod_tap_interrupt(tapping_keycode, &tapping_key)
-#    elif defined(IGNORE_MOD_TAP_INTERRUPT)
+#    if defined(IGNORE_MOD_TAP_INTERRUPT)
 #        define TAP_GET_IGNORE_MOD_TAP_INTERRUPT true
 #    else
 #        define TAP_GET_IGNORE_MOD_TAP_INTERRUPT false
-#    endif
-
-#    ifdef TAPPING_FORCE_HOLD_PER_KEY
-#        define TAP_GET_TAPPING_FORCE_HOLD get_tapping_force_hold(tapping_keycode, &tapping_key)
-#    elif defined(TAPPING_FORCE_HOLD)
-#        define TAP_GET_TAPPING_FORCE_HOLD true
-#    else
-#        define TAP_GET_TAPPING_FORCE_HOLD false
 #    endif
 
 /** \brief Tapping
@@ -223,7 +222,7 @@ bool process_tapping(keyrecord_t *keyp) {
                             // Rolled over the two keys.
                             (tapping_key.tap.interrupted == true && (
                                 (TAP_IS_LT && TAP_GET_HOLD_ON_OTHER_KEY_PRESS) ||
-                                (TAP_IS_MT && !TAP_GET_IGNORE_MOD_TAP_INTERRUPT)
+                                (TAP_IS_MT && TAP_GET_HOLD_ON_OTHER_KEY_PRESS)
                                 )
                             )
                             // Makes Retro Shift ignore [IGNORE_MOD_TAP_INTERRUPT's
@@ -385,7 +384,7 @@ bool process_tapping(keyrecord_t *keyp) {
         if (WITHIN_TAPPING_TERM(event) || MAYBE_RETRO_SHIFTING(event)) {
             if (event.pressed) {
                 if (IS_TAPPING_RECORD(keyp)) {
-                    if (!TAP_GET_TAPPING_FORCE_HOLD && !tapping_key.tap.interrupted && tapping_key.tap.count > 0) {
+                    if (WITHIN_QUICK_TAP_TERM(event) && !tapping_key.tap.interrupted && tapping_key.tap.count > 0) {
                         // sequential tap.
                         keyp->tap = tapping_key.tap;
                         if (keyp->tap.count < 15) keyp->tap.count += 1;
