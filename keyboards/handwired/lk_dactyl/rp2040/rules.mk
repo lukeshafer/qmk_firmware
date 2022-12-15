@@ -1,0 +1,11 @@
+# MCU name
+MCU = RP2040
+
+# Bootloader selection
+BOOTLOADER = rp2040
+
+MOUSE_SHARED_EP = yes
+SERIAL_DRIVER = vendor
+POINTING_DEVICE_ENABLE = yes
+POINTING_DEVICE_DRIVER = pmw3389
+
