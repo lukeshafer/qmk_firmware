@@ -10,6 +10,19 @@ enum custom_layers {
 #define RAISE MO(_RAISE)
 #define LOWER MO(_LOWER)
 
+void pointing_device_init_user(void) {
+    set_auto_mouse_layer(0); // only required if AUTO_MOUSE_DEFAULT_LAYER is not set to index of <mouse_layer>
+    set_auto_mouse_enable(true);         // always required before the auto mouse feature will work
+}
+
+void keyboard_post_init_user(void) {
+  // Customise these values to desired behaviour
+  debug_enable=true;
+  debug_matrix=true;
+  //debug_keyboard=true;
+  //debug_mouse=true;
+}
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [_QWERTY] = LAYOUT_5x6(
      KC_GRV , KC_1  , KC_2  , KC_3  , KC_4   , KC_5  ,                         KC_6  , KC_7  , KC_8  , KC_9  , KC_0  ,KC_EQL,

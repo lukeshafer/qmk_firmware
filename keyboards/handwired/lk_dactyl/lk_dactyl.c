@@ -1,14 +1,23 @@
 #include "lk_dactyl.h"
+#include "print.h"
 
 #ifdef POINTING_DEVICE_ENABLE
+/*print("init dactyl");*/
 
 /*static bool scrolling_mode = false;*/
 
 void pointing_device_init_kb(void) {
+    print("init pointing device function");
     pmw33xx_init(0);         // index 1 is the second device.
     pmw33xx_set_cpi(0, 800); // applies to first sensor
     pointing_device_init_user();
 }
+
+/*void pointing_device_init_user(void) {*/
+    /*set_auto_mouse_layer(0); // only required if AUTO_MOUSE_DEFAULT_LAYER is not set to index of <mouse_layer>*/
+    /*set_auto_mouse_enable(true);         // always required before the auto mouse feature will work*/
+/*}*/
+
 
 // Contains report from sensor #0 already, need to merge in from sensor #1
 report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
@@ -24,17 +33,17 @@ report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
 #endif
 
 /*layer_state_t layer_state_set_kb(layer_state_t state) {*/
-    /*switch (get_highest_layer(state)) {*/
-        /*[>case RAISE: // If we're on the _RAISE layer enable scrolling mode<]*/
-            /*[>scrolling_mode = true;<]*/
-            /*[>pointing_device_set_cpi(2000);<]*/
-            /*[>break;<]*/
-        /*default:*/
-            /*if (scrolling_mode) { // check if we were scrolling before and set disable if so*/
-                /*scrolling_mode = false;*/
-                /*pointing_device_set_cpi(8000);*/
-            /*}*/
-            /*break;*/
-    /*}*/
-    /*return state;*/
+/*switch (get_highest_layer(state)) {*/
+/*[>case RAISE: // If we're on the _RAISE layer enable scrolling mode<]*/
+/*[>scrolling_mode = true;<]*/
+/*[>pointing_device_set_cpi(2000);<]*/
+/*[>break;<]*/
+/*default:*/
+/*if (scrolling_mode) { // check if we were scrolling before and set disable if so*/
+/*scrolling_mode = false;*/
+/*pointing_device_set_cpi(8000);*/
+/*}*/
+/*break;*/
+/*}*/
+/*return state;*/
 /*}*/
