@@ -1,4 +1,4 @@
-// Copyright 2022 QMK
+// Copyright 2023 QMK
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /*******************************************************************************
@@ -24,7 +24,7 @@
 *******************************************************************************/
 
 #pragma once
-#include "keymap.h"
+#include "keycodes.h"
 // clang-format off
 
 // Aliases
@@ -70,4 +70,3 @@
 #define KC_RIGHT_ANGLE_BRACKET KC_RABK
 #define KC_GT KC_RABK
 #define KC_QUESTION KC_QUES
-

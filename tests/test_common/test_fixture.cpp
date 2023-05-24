@@ -22,7 +22,6 @@ extern "C" {
 #include "debug.h"
 #include "eeconfig.h"
 #include "keyboard.h"
-#include "keymap.h"
 
 void set_time(uint32_t t);
 void advance_time(uint32_t ms);
@@ -82,12 +81,12 @@ TestFixture::~TestFixture() {
 #endif
 
     idle_for(TAPPING_TERM * 10);
-    testing::Mock::VerifyAndClearExpectations(&driver);
+    VERIFY_AND_CLEAR(driver);
 
     /* Verify that the matrix really is cleared */
     EXPECT_NO_REPORT(driver);
     idle_for(TAPPING_TERM * 10);
-    testing::Mock::VerifyAndClearExpectations(&driver);
+    VERIFY_AND_CLEAR(driver);
     m_this = nullptr;
 
     test_logger.info() << "test fixture clean-up end." << std::endl;
